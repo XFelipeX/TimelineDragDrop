@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import { COLUMNS } from "./constants";
-import { calcPercent, secondsToPixels } from "./Column";
+import React, { useRef } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
+import { COLUMNS } from './constants';
+import { calcPercent, secondsToPixels } from './Column';
 const { TIMELINE } = COLUMNS;
 
 const MovableItem = ({
@@ -29,7 +29,7 @@ const MovableItem = ({
   };
 
   const [{ isDragging }, drag] = useDrag({
-    item: { index, name, currentColumnName, type: "Our first type", ...item },
+    item: { index, name, currentColumnName, type: 'Our first type', ...item },
     end: (item, monitor) => {
       const dropResult = monitor.getDropResult();
       if (dropResult) {
@@ -51,15 +51,15 @@ const MovableItem = ({
           }
         });
 
-        if (lastItem && lastItem.id) {
+        if (lastItem && lastItem.id && item.column === SCREEN) {
           const positionLastItem = document
             .getElementById(lastItem.id)
             .getBoundingClientRect();
           const timelineLimit = document
-            .getElementById("timeline")
+            .getElementById('timeline')
             .getBoundingClientRect().right;
           const timelineWidth = document
-            .getElementById("timeline")
+            .getElementById('timeline')
             .getBoundingClientRect().width;
           const percentNewItem = calcPercent(item.width, interval);
           const pxNewItem = secondsToPixels(percentNewItem, timelineWidth);
@@ -69,7 +69,7 @@ const MovableItem = ({
             positionLastItem.right + pxNewItem > timelineLimit &&
             item.id !== lastItem.id
           ) {
-            alert("nao pode mover coluna");
+            alert('nao pode mover coluna');
             canChangeColumn = false;
           }
         }
@@ -96,7 +96,7 @@ const MovableItem = ({
   const ref = useRef(null);
 
   const [, drop] = useDrop({
-    accept: "Our first type",
+    accept: 'Our first type',
     hover(item, monitor) {
       if (!ref.current) {
         return;
@@ -132,29 +132,29 @@ const MovableItem = ({
         currentColumnName === TIMELINE
           ? {
               opacity,
-              position: " absolute",
+              position: ' absolute',
               backgroundColor: item.backColor,
-              cursor: "move",
-              color: "#fff",
-              width: widthItem + "%",
-              height: "100%",
-              margin: "0 auto",
+              cursor: 'move',
+              color: '#fff',
+              width: widthItem + '%',
+              height: '100%',
+              margin: '0 auto',
               left: `${x}px`,
             }
           : {
               opacity,
               backgroundColor: item.backColor,
-              cursor: "move",
-              color: "#fff",
-              width: "250px",
-              height: "150px",
-              margin: "0 auto",
-              display: "flex",
-              marginTop: "30px",
+              cursor: 'move',
+              color: '#fff',
+              width: '250px',
+              height: '150px',
+              margin: '0 auto',
+              display: 'flex',
+              marginTop: '30px',
             }
       }
     >
-      {item.description + " " + item.time}
+      {item.description + ' ' + item.time}
     </div>
   );
 };

@@ -73,7 +73,7 @@ function App() {
           >
             {returnItemsForColumn(TIMELINE)}
           </Column>
-          <div id="testime" style={{position:"absolute",bottom:"300px",left:"400px",fontSize:"30px"}}> horas</div>
+          <div id="hoursTimeline" style={{position:"absolute",bottom:"300px",left:"400px",fontSize:"30px"}}> horas</div>
         </div>
 
         <div style={styles.right}>

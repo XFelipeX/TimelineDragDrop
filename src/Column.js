@@ -5,70 +5,81 @@ import { COLUMNS } from "./constants";
 const { SCREEN, TIMELINE } = COLUMNS;
 
 // Dropable area
-const Column = ({
-  children,
-  title,
-  styles,
-  items,
-  setItems,
-  id,
-  interval,
-}) => {
+const Column = ({ children, title, styles, items, setItems, id, interval }) => {
   const [itemArrowMove, setItemArrowMove] = React.useState("");
+  const [itemMove, setItemMove] = React.useState();
+
+  //function calculates hours,mimute, seconds
+  const getTime = (result) => {
+    let hours = Math.floor(result / 3600);
+    let minute = Math.floor((result - hours * 3600) / 60);
+    let seconds = Math.trunc(result % 60);
+    return { hours, minute, seconds };
+  };
 
   React.useEffect(() => {
     const timeLine = document.getElementById("timeline");
     const timeLinePosition = timeLine.getBoundingClientRect();
-    const left = timeLinePosition.left;
-    const right = timeLinePosition.right;
+    //function to know how many pixels it has in  a second
+    let intervalAndRight = interval / timeLinePosition.width;
+    let espaceSecond = 1 / intervalAndRight;
 
     items.map((items) => {
       if (items.id === itemArrowMove.id) {
-        let diferenca = items.x - left;
-        let result = diferenca * (interval / right);
-        let tempohours = Math.floor(result / 3600);
-        let tempomin = Math.floor((result - tempohours * 3600) / 60);
-        let temposec = Math.trunc(result % 60);
-        console.log(interval, right);
+        setItemMove(items);
+        //calculation to know the seconds the screen starts
+        let difference = items.x - 0;
+        let result = difference * (interval / timeLinePosition.width);
+        const { hours, minute, seconds } = getTime(result);
         if (items.column == "timeline") {
           document.querySelector(
-            "#testime"
-          ).innerHTML = `a ${items.description} tem ${tempohours}:${tempomin}:${temposec}`;
-        } else {
-          document.querySelector("#testime").innerHTML = "horas";
+            "#hoursTimeline"
+          ).innerHTML = `a ${items.description} começa ${hours}:${minute}:${seconds}`;
         }
-        // if(itemHover.id != itemArrowMove.id){
-        // alert(`essa tela começa exatament as 7:${Math.floor(result / 60)}:${Math.floor(result % 60)}`)
-        // }
       }
     });
 
+    //function move screen with arrows
     const ArrowMoveItem = (event) => {
+      itemMove && moveBox(items.id, itemMove.x);
       items.map((items) => {
-        console.log(items.id, itemArrowMove);
+        let calcPercent = Math.round((items.width / interval) * 100);
+        let calcWidthPx = Math.round(
+          (calcPercent * timeLinePosition.width) / 100
+        );
+
         if (items.id === itemArrowMove.id) {
-          let intervalAndRight = interval / right;
-          let espaceSecond = 1 / intervalAndRight;
-          if (event.code === "ArrowRight" && items.column == "timeline") {
-            let calcPercent = Math.round((items.width / interval) * 100);
-            let calcWidthPx = Math.round(
-              (calcPercent * timeLinePosition.width) / 100
-            );
-            console.log("calc", espaceSecond);
-            if (items.x + calcWidthPx < right) {
+          if (
+            event.code === "ArrowRight" &&
+            items.column == "timeline" &&
+            items.x + calcWidthPx < timeLinePosition.width
+          ) {
+            let x = Math.round(items.x + espaceSecond + timeLinePosition.left);
+            let response = verifyColision(x, items);
+            if (response) {
               moveBox(items.id, items.x + espaceSecond);
-              document.querySelector("#testime").innerHTML = "horas";
+            } else {
+              alert("você chegou ao limite");
+              moveBox(items.id, items.x - espaceSecond);
+            }
+            document.querySelector("#hoursTimeline").innerHTML = "horas";
+          } else if (
+            event.code === "ArrowLeft" &&
+            items.column == "timeline" &&
+            items.x - espaceSecond > 0
+          ) {
+            let x = items.x + timeLinePosition.left - espaceSecond;
+            let response = verifyColision(x, items);
+            if (response) {
+              moveBox(items.id, items.x - espaceSecond);
             } else {
               alert("você chegou ao limite");
             }
-          }
-          if (event.code === "ArrowLeft" && items.column == "timeline") {
-            if (items.x > left) {
-              moveBox(items.id, items.x - parseFloat(espaceSecond));
-              document.querySelector("#testime").innerHTML = "horas";
-            } else {
-              alert("você chegou ao limite");
-            }
+            document.querySelector("#hoursTimeline").innerHTML = "horas";
+          } else {
+            moveBox(items.id, itemMove.x);
+            console.log("items", itemMove.x);
+            alert("você chegou ao limite");
           }
         }
       });
@@ -85,21 +96,17 @@ const Column = ({
     }),
 
     hover(item, monitor) {
-      document.querySelector("#testime").innerHTML = "horas";
+      document.querySelector("#hoursTimeline").innerHTML = "horas";
       const timeLine = document.getElementById("timeline");
       const timeLinePosition = timeLine.getBoundingClientRect();
       const left = timeLinePosition.left;
-      const right = timeLinePosition.right;
-      let diferenca = monitor.getSourceClientOffset().x - left;
-      let result = diferenca * (interval / right);
-      let tempohours = Math.floor(result / 3600);
-      let tempomin = Math.floor((result - tempohours * 3600) / 60);
-      let temposec = Math.trunc(result % 60);
-
-      if (monitor.getSourceClientOffset().x <= right) {
+      let difference = monitor.getSourceClientOffset().x - left;
+      let result = difference * (interval / timeLinePosition.width);
+      const { hours, minute, seconds } = getTime(result);
+      if (monitor.getSourceClientOffset().x <= timeLinePosition.width) {
         document.querySelector(
-          "#testime"
-        ).innerHTML = `a ${item.name} começa ${tempohours}:${tempomin}:${temposec}`;
+          "#hoursTimeline"
+        ).innerHTML = `a ${item.name} começa ${hours}:${minute}:${seconds}`;
       }
     },
 
@@ -166,10 +173,6 @@ const Column = ({
               alert(`alterando eixo x do elemento para ${x}`);
               moveBox(item.id, x);
             } else {
-              if (x + calcWidthPxItem > right || x < left) {
-                return;
-              }
-
               const copyArray = items.filter(
                 (item) => item.column === TIMELINE
               );
@@ -178,6 +181,10 @@ const Column = ({
                 x = 0;
               } else {
                 x = x - timeLinePosition.x;
+              }
+
+              if (x + calcWidthPxItem > right || x < left) {
+                return;
               }
 
               alert(`alterando eixo x do elemento para ${x}`);
